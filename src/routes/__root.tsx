@@ -129,6 +129,14 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
+        {/* Pose la classe `dark` avant le premier paint : evite le flash blanc pour les
+            visiteurs en mode sombre. Ce script est independant de React, donc il ne
+            provoque pas de mismatch d'hydratation (le premier rendu React reste "light"). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("bellagaz.theme");if(t!=="dark"&&t!=="light"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}if(t==="dark"){document.documentElement.classList.add("dark");}}catch(e){}})();`,
+          }}
+        />
       </head>
       <body>
         {children}

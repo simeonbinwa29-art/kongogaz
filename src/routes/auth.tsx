@@ -317,12 +317,18 @@ function SignUpForm() {
         // La porte admin se répare elle-même à la visite suivante de /admin.
       }
       toast.success("Compte administrateur créé !", {
-        description: "Redirection vers le tableau de bord…",
+        description: data.session
+          ? "Redirection vers le tableau de bord…"
+          : "Connectez-vous pour accéder au tableau de bord.",
       });
       return;
     }
+    // `mailer_autoconfirm` peut être actif : la session existe déjà, l'effet
+    // ligne 131 redirige. Sinon une confirmation d'e-mail reste nécessaire.
     toast.success("Compte créé !", {
-      description: "Connectez-vous avec votre numéro de téléphone.",
+      description: data.session
+        ? "Vous êtes connecté. Redirection…"
+        : "Connectez-vous avec votre numéro de téléphone.",
     });
   };
 

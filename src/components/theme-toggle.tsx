@@ -13,6 +13,9 @@ export type Theme = "light" | "dark";
 
 const THEME_KEY = "bellagaz.theme";
 
+/** Theme rendu par defaut, identique en SSR et a l'hydratation (cf. ThemeProvider). */
+const DEFAULT_THEME: Theme = "light";
+
 type ThemeCtx = { theme: Theme; toggleTheme: () => void };
 
 const ThemeContext = createContext<ThemeCtx | null>(null);
@@ -40,11 +43,17 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
+  // Le theme initial doit etre identique sur le serveur et sur le client, sinon
+  // React signale un mismatch d'hydratation (le serveur n'a ni window ni localStorage).
+  // La valeur reelle est appliquee juste apres le montage, dans le useEffect ci-dessous,
+  // et un script inline dans <head> pose la classe `dark` avant le premier paint (voir __root.tsx).
+  const [theme, setTheme] = useState<Theme>(DEFAULT_THEME);
+
+  useEffect(() => {
     const t = readStoredTheme() ?? systemTheme();
     applyTheme(t);
-    return t;
-  });
+    setTheme(t);
+  }, []);
 
   useEffect(() => {
     applyTheme(theme);
