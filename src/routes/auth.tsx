@@ -235,6 +235,12 @@ function SignInForm() {
           placeholder="••••••••"
         />
       </Field>
+      {isMasterAdminPhone(normalizePhone(phone) || "") && (
+        <p className="rounded-lg bg-white/10 px-3 py-2 text-xs leading-relaxed text-white/80">
+          Compte administrateur : saisissez ici votre <strong>mot de passe de compte</strong>. Le{" "}
+          <strong>mot de passe administrateur</strong> vous sera demandé à l'étape suivante.
+        </p>
+      )}
       <button
         type="submit"
         disabled={busy || locked}

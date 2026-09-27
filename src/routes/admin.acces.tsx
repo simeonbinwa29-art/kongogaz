@@ -102,6 +102,10 @@ function AdminAccessPage() {
           <p className="mt-1 text-sm text-white/70">
             Confirmez votre identité pour ouvrir le tableau de bord.
           </p>
+          <p className="mt-2 text-xs leading-relaxed text-white/50">
+            Ce mot de passe est <strong>différent</strong> de votre mot de passe de compte : il est
+            demandé une seule fois, pour ouvrir l'accès administrateur.
+          </p>
         </div>
 
         <div className="glass w-full rounded-3xl p-5 shadow-xl">
