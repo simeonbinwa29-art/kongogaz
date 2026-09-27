@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Flame, KeyRound, Loader2, ShieldCheck } from "lucide-react";
+import { Flame, KeyRound, Loader2, LogOut, ShieldCheck, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,9 @@ import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { isAdminUser } from "@/lib/admin-api";
 import { grantMasterAdminRole } from "@/lib/master-admin-server";
-import { MASTER_ADMIN_EMAIL } from "@/lib/phone";
+import { MASTER_ADMIN_EMAIL, MASTER_ADMIN_PHONE } from "@/lib/phone";
+
+type GateState = { kind: "checking" } | { kind: "form" } | { kind: "wrong-account"; email: string };
 
 export const Route = createFileRoute("/admin/acces")({
   head: () => ({
@@ -21,10 +23,11 @@ function AdminAccessPage() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const [state, setState] = useState<GateState>({ kind: "checking" });
 
-  // Vérifie qu'une session existe et qu'elle a encore besoin de cette étape,
-  // pour renvoyer directement vers /admin si le rôle a déjà été attribué.
+  // Vérifie la session avant d'afficher quoi que ce soit. On ne redirige plus
+  // silencieusement : un simple `navigate("/auth")` envoyait l'utilisateur vers la
+  // page client, qui renvoyait à son tour vers "/", sans aucune explication.
   useEffect(() => {
     let alive = true;
 
@@ -40,20 +43,26 @@ function AdminAccessPage() {
         return;
       }
       if (session.user.email !== MASTER_ADMIN_EMAIL) {
-        navigate({ to: "/auth", replace: true });
+        setState({ kind: "wrong-account", email: session.user.email ?? "" });
         return;
       }
       if (await isAdminUser(session.user.id)) {
-        navigate({ to: "/admin", replace: true });
+        if (alive) navigate({ to: "/admin", replace: true });
         return;
       }
-      if (alive) setChecking(false);
+      if (alive) setState({ kind: "form" });
     })();
 
     return () => {
       alive = false;
     };
   }, [navigate]);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    sessionStorage.setItem("bg_redirect_after_auth", "/admin/acces");
+    navigate({ to: "/auth", replace: true });
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,9 +118,29 @@ function AdminAccessPage() {
         </div>
 
         <div className="glass w-full rounded-3xl p-5 shadow-xl">
-          {checking ? (
+          {state.kind === "checking" ? (
             <div className="grid place-items-center py-6 text-white/70">
               <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : state.kind === "wrong-account" ? (
+            <div className="space-y-3 text-center">
+              <p className="flex items-start gap-2 rounded-lg bg-amber-500/15 px-3 py-2.5 text-left text-sm leading-relaxed text-amber-100">
+                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  Vous êtes connecté avec <strong>{state.email}</strong>, qui n'est pas le compte
+                  administrateur. Déconnectez-vous, puis reconnectez-vous avec le{" "}
+                  <strong>{MASTER_ADMIN_PHONE}</strong>.
+                </span>
+              </p>
+              <button
+                type="button"
+                onClick={signOut}
+                className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-white transition hover:opacity-90"
+                style={{ background: "var(--flame)" }}
+              >
+                <LogOut className="h-4 w-4" />
+                Se déconnecter
+              </button>
             </div>
           ) : (
             <form onSubmit={onSubmit} className="space-y-3">
