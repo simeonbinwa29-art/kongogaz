@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { KINSHASA_COMMUNES } from "@/lib/kinshasa";
 import { normalizePhone, phoneToAuthIdentifier, isMasterAdminPhone } from "@/lib/phone";
-import { ensureMasterAdminRole } from "@/lib/admin-api";
 
 type AuthErrorLike = { message?: string; code?: string; status?: number | null };
 
@@ -203,13 +202,10 @@ function SignInForm() {
       return;
     }
     if (isMaster && data.user) {
-      try {
-        await ensureMasterAdminRole(data.user.id);
-      } catch {
-        // La porte admin se répare elle-même à la visite suivante de /admin.
-      }
+      // Le rôle admin n'est plus accordé ici : il exige le mot de passe
+      // administrateur, saisi une seule fois sur /admin/acces.
       toast.success("Connecté en tant qu'administrateur", {
-        description: "Redirection vers le tableau de bord…",
+        description: "Saisissez votre mot de passe administrateur pour ouvrir le tableau de bord.",
       });
       return;
     }
@@ -311,15 +307,12 @@ function SignUpForm() {
       return;
     }
     if (isMaster && data.user) {
-      try {
-        await ensureMasterAdminRole(data.user.id);
-      } catch {
-        // La porte admin se répare elle-même à la visite suivante de /admin.
-      }
+      // Le rôle admin n'est pas accordé ici : il exige le mot de passe
+      // administrateur, saisi une seule fois sur /admin/acces.
       toast.success("Compte administrateur créé !", {
         description: data.session
-          ? "Redirection vers le tableau de bord…"
-          : "Connectez-vous pour accéder au tableau de bord.",
+          ? "Saisissez votre mot de passe administrateur pour ouvrir le tableau de bord."
+          : "Connectez-vous, puis saisissez votre mot de passe administrateur.",
       });
       return;
     }

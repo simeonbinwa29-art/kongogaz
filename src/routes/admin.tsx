@@ -46,7 +46,6 @@ import {
 import {
   signOutAdmin,
   isAdminUser,
-  ensureMasterAdminRole,
   assignOrderDriver,
   dbUpdateErrorMessage,
 } from "@/lib/admin-api";
@@ -95,12 +94,13 @@ export const Route = createFileRoute("/admin")({
       throw redirect({ to: "/auth" });
     }
 
-    let admin = await isAdminUser(session.user.id);
+    const admin = await isAdminUser(session.user.id);
 
-    // Compte maître : auto-promotion du rôle admin, puis re-vérification.
+    // Compte maître sans rôle : la promotion exige un mot de passe administrateur
+    // vérifié côté serveur, on l'envoie vers la page d'accès plutôt que /auth
+    // (qui le renverrait ici en boucle).
     if (!admin && session.user.email === MASTER_ADMIN_EMAIL) {
-      await ensureMasterAdminRole(session.user.id).catch(() => {});
-      admin = await isAdminUser(session.user.id);
+      throw redirect({ to: "/admin/acces" });
     }
 
     if (!admin) throw redirect({ to: "/auth" });
@@ -169,16 +169,14 @@ function AdminPage() {
         return;
       }
 
-      let admin = await isAdminUser(session.user.id);
+      const admin = await isAdminUser(session.user.id);
       if (!alive) return;
 
-      // Compte maître : auto-promotion du rôle admin (couvre aussi la course à
-      // la connexion, où la promotion n'a pas forcément abouti avant la redirection).
+      // Compte maître sans rôle : le mot de passe administrateur est exigé une
+      // seule fois, sur /admin/acces, qui accorde ensuite le rôle.
       if (!admin && session.user.email === MASTER_ADMIN_EMAIL) {
-        await ensureMasterAdminRole(session.user.id).catch(() => {});
-        if (!alive) return;
-        admin = await isAdminUser(session.user.id);
-        if (!alive) return;
+        navigate({ to: "/admin/acces", replace: true });
+        return;
       }
 
       if (admin) {

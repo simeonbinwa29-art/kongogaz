@@ -3,15 +3,6 @@ import { resolveAuthIdentifier } from "./phone";
 import { updateOrder, type OrderStatus } from "./orders-api";
 
 /**
- * Garantit automatiquement le rôle `admin` au compte maître (+243973032968).
- * La RPC `promote_master_admin` refuse toute promotion pour un autre compte.
- */
-export async function ensureMasterAdminRole(userId: string): Promise<void> {
-  const { error } = await supabase.rpc("promote_master_admin", { p_user_id: userId });
-  if (error) throw error;
-}
-
-/**
  * Vérifie côté serveur (via RLS) que l'utilisateur détient bien le rôle `admin`
  * dans la table `user_roles`. Aucune confiance n'est accordée à un flag local.
  */

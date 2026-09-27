@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminAccesRouteImport } from './routes/admin.acces'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as CommandeOrderIdRouteImport } from './routes/commande.$orderId'
 import { Route as FactureOrderIdRouteImport } from './routes/facture.$orderId'
@@ -31,6 +32,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminAccesRoute = AdminAccesRouteImport.update({
+  id: '/acces',
+  path: '/acces',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
@@ -49,16 +55,18 @@ const FactureOrderIdRoute = FactureOrderIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
+  '/admin/acces': typeof AdminAccesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/commande/$orderId': typeof CommandeOrderIdRoute
   '/facture/$orderId': typeof FactureOrderIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
+  '/admin/acces': typeof AdminAccesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/commande/$orderId': typeof CommandeOrderIdRoute
   '/facture/$orderId': typeof FactureOrderIdRoute
@@ -66,8 +74,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
+  '/admin/acces': typeof AdminAccesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/commande/$orderId': typeof CommandeOrderIdRoute
   '/facture/$orderId': typeof FactureOrderIdRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/admin/acces'
     | '/auth/callback'
     | '/commande/$orderId'
     | '/facture/$orderId'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/admin/acces'
     | '/auth/callback'
     | '/commande/$orderId'
     | '/facture/$orderId'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/admin/acces'
     | '/auth/callback'
     | '/commande/$orderId'
     | '/facture/$orderId'
@@ -101,7 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   CommandeOrderIdRoute: typeof CommandeOrderIdRoute
   FactureOrderIdRoute: typeof FactureOrderIdRoute
@@ -130,6 +142,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/acces': {
+      id: '/admin/acces'
+      path: '/acces'
+      fullPath: '/admin/acces'
+      preLoaderRoute: typeof AdminAccesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/callback'
@@ -154,6 +173,16 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminRouteChildren {
+  AdminAccesRoute: typeof AdminAccesRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAccesRoute: AdminAccesRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 interface AuthRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
 }
@@ -166,7 +195,7 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   CommandeOrderIdRoute: CommandeOrderIdRoute,
   FactureOrderIdRoute: FactureOrderIdRoute,
