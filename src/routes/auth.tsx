@@ -185,7 +185,9 @@ function SignInForm() {
     setBusy(true);
     const isMaster = isMasterAdminPhone(normalized);
     if (isMaster && typeof window !== "undefined") {
-      sessionStorage.setItem("bg_redirect_after_auth", "/admin");
+      // La session existe à ce stade : on vise directement l'écran du mot de
+      // passe administrateur plutôt que de rebondir via /admin.
+      sessionStorage.setItem("bg_redirect_after_auth", "/admin/acces");
     }
     const { data, error } = await supabase.auth.signInWithPassword({
       email: phoneToAuthIdentifier(normalized),
