@@ -228,13 +228,19 @@ function Index() {
     }
     fetchProfile(user.id).then((p) => {
       if (!p) return;
-      const local = loadProfile();
-      saveProfile({
-        ...local,
-        fullName: local.fullName || p.full_name || "",
-        phone: local.phone || p.phone_whatsapp || "",
-        whatsapp: local.whatsapp || p.phone_whatsapp || "",
-      });
+      // La base est la source de vérité pour l'identité : le local ne sert
+      // qu'à la conserver quand la ligne de profil est incomplète. L'inverse
+      // (local prioritaire) ré-affichait le profil d'un autre compte.
+      const local = loadProfile(user.id);
+      saveProfile(
+        {
+          ...local,
+          fullName: p.full_name || local.fullName || "",
+          phone: p.phone_whatsapp || local.phone || "",
+          whatsapp: p.phone_whatsapp || local.whatsapp || "",
+        },
+        user.id,
+      );
       if (p.default_commune) setCommune((c) => (c === "Gombe" ? p.default_commune! : c));
     });
     fetchLoyalty(user.id)
@@ -2276,12 +2282,16 @@ function AccountView({
 }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState(() => loadProfile());
+  const userId = user?.id ?? null;
+  const [profile, setProfile] = useState(() => loadProfile(userId));
   const [section, setSection] = useState<ProfileSection | null>(null);
 
+  // Le store est cloisonné par utilisateur : à chaque changement de session on
+  // recharge le bon profil, sinon l'ancien reste affiché.
   useEffect(() => {
-    return subscribe(() => setProfile(loadProfile()));
-  }, []);
+    setProfile(loadProfile(userId));
+    return subscribe(() => setProfile(loadProfile(userId)));
+  }, [userId]);
 
   return (
     <>
@@ -2377,7 +2387,7 @@ function AccountView({
         profile={profile}
         onChange={(p) => {
           setProfile(p);
-          saveProfile(p);
+          saveProfile(p, userId);
         }}
         onClose={() => setSection(null)}
       />

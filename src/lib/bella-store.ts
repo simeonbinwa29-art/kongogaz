@@ -248,17 +248,31 @@ export function saveAccessories(a: Accessory[]) {
   saveJSON(ACCESSORIES_KEY, a);
 }
 
-export function loadProfile(): ClientProfile {
-  return loadJSON<ClientProfile>(PROFILE_KEY, {
-    fullName: "",
-    phone: "",
-    whatsapp: "",
-    addresses: [],
-    payments: [],
-  });
+const EMPTY_PROFILE: ClientProfile = {
+  fullName: "",
+  phone: "",
+  whatsapp: "",
+  addresses: [],
+  payments: [],
+};
+
+/**
+ * Le profil local est cloisonné par utilisateur.
+ *
+ * Avec une clé unique, le profil saisi par un premier compte restait dans le
+ * navigateur et était réaffiché au compte suivant : l'en-tête affichait la
+ * session courante tandis que la carte profil affichait l'ancien utilisateur.
+ * Un visiteur non connecté conserve sa propre clé « invité ».
+ */
+function profileKey(userId?: string | null): string {
+  return userId ? `${PROFILE_KEY}.${userId}` : PROFILE_KEY;
 }
-export function saveProfile(p: ClientProfile) {
-  saveJSON(PROFILE_KEY, p);
+
+export function loadProfile(userId?: string | null): ClientProfile {
+  return loadJSON<ClientProfile>(profileKey(userId), EMPTY_PROFILE);
+}
+export function saveProfile(p: ClientProfile, userId?: string | null) {
+  saveJSON(profileKey(userId), p);
 }
 
 // Admin auth (client-side PIN gate)
