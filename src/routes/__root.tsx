@@ -126,7 +126,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    // suppressHydrationWarning : le script inline ci-dessous pose `class="dark"` sur
+    // <html> avant l'hydratation. React voit alors un attribut présent côté DOM mais
+    // absent de son rendu serveur, ce qui déclenchait un mismatch sur la balise html.
+    // L'avertissement est neutralisé sur ce seul noeud, le reste de l'arbre reste
+    // vérifié normalement.
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
         {/* Pose la classe `dark` avant le premier paint : evite le flash blanc pour les
